@@ -29,3 +29,4 @@ C:\Users\wassi\source\repos\Embedding\Embedding\obj\Debug\net8.0\refint\Embeddin
 C:\Users\wassi\source\repos\Embedding\Embedding\obj\Debug\net8.0\Embedding.pdb
 C:\Users\wassi\source\repos\Embedding\Embedding\obj\Debug\net8.0\Embedding.genruntimeconfig.cache
 C:\Users\wassi\source\repos\Embedding\Embedding\obj\Debug\net8.0\ref\Embedding.dll
+C:\Users\wassi\source\repos\Embedding\Embedding\obj\Debug\net8.0\Embedding.sourcelink.json

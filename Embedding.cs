@@ -9,6 +9,7 @@ public static class Embedding
     private static readonly HttpClient client = new HttpClient();
     private static readonly string apikey = "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";
     private static readonly string url = "https://api.openai.com/v1/embeddings";
+    private static readonly string similarityUrl = "https://api.openai.com/v1/engines/text-similarity-babbage-001/embeddings";
     public static async Task<JToken> EmbedText(string text)
     {
         var payload = new
@@ -37,11 +38,13 @@ public static class Embedding
         }
     }
 
-    public static async Task<double> GetTextSimilarity(string text1, string text2)
+    public static async Task<double> GetTextSimilarity(dynamic text1, dynamic text2)
     {
+        List<dynamic> comparision = new List<dynamic> { text1, text2 };
         var payload = new
         {
-            input = new[] { text1, text2 }
+            input = comparision,
+            model = "text-similarity-babbage-001" 
         };
         var json = JsonConvert.SerializeObject(payload);
         var content = new StringContent(json, Encoding.UTF8, "application/json");
@@ -50,11 +53,10 @@ public static class Embedding
         {
             client.DefaultRequestHeaders.Clear();
             client.DefaultRequestHeaders.Add("Authorization", $"Bearer {apikey}");
-            var response = await client.PostAsync("https://api.openai.com/v1/engines/text-similarity-davinci-001/embeddings", content);
+            var response = await client.PostAsync(similarityUrl, content);
             var responseString = await response.Content.ReadAsStringAsync();
             var responseObject = JsonConvert.DeserializeObject<JObject>(responseString);
-
-            double similarity = responseObject["data"]?[0]?["similarity"]?.Value<double>() ?? 0.0;
+            var similarity = responseObject["data"]?[0]?["similarity"]?.Value<double>() ?? 0.0;
             return similarity;
         }
         catch (Exception e)
@@ -76,17 +78,22 @@ public static class Embedding
 
         double best_similarity = Double.NegativeInfinity;
         string bestMatch = null;
-        Console.WriteLine("going in the loop");
         foreach (var document in documents)
         {
-            var result = await GetTextSimilarity(array_origin.toString(), document.GetElement("embedding").ToString());
-            Console.WriteLine(result);
-            if (best_similarity < result)
+            var embeddingElement = document.GetElement("embedding");
+            if (embeddingElement == null)
             {
-                best_similarity = result;
-                bestMatch = document.GetElement("title").Value.ToString();
+                continue;
             }
-            
+            var embedding = embeddingElement.Value.ToString();
+            var similarity = await Embedding.GetTextSimilarity(array_origin, embedding);
+            if (similarity > best_similarity)
+            {
+                best_similarity = similarity;
+                bestMatch = document.GetElement("title").Value?.ToString();
+                Console.WriteLine("best match is: " + bestMatch);
+                Console.WriteLine("still searching");
+            }
         }
         return bestMatch;
     }

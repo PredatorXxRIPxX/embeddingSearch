@@ -22,11 +22,11 @@ public class Database
         setting.ServerApi = new ServerApi(ServerApiVersion.V1);
         try
         {
-            Console.WriteLine("connectiong to DB");
+            Console.WriteLine("trying connecting to DB ...");
             client = new MongoClient(setting);
-            var result = client.GetDatabase("test").RunCommand<BsonDocument>(new BsonDocument("ping", 1));
+            var result = client.GetDatabase("onistep").RunCommand<BsonDocument>(new BsonDocument("ping", 1));
             Console.WriteLine(result);
-            db = client.GetDatabase("test");
+            db = client.GetDatabase("onistep");
             collection = db.GetCollection<BsonDocument>("exceldatas");
             Console.WriteLine("connected to DB");
         }
@@ -39,7 +39,6 @@ public class Database
 
     public static async Task<List<BsonDocument>> getDocuments()
     {
-        documents = await collection.Find(new BsonDocument()).ToListAsync();
-        return documents;
+        return collection.Find(new BsonDocument()).ToList();
     }
 }

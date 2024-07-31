@@ -4,11 +4,12 @@ class Program
     public static async Task Main(String[] args)
     {
         Console.WriteLine("starting Program:");
-        string connectionString = "mongodb+srv://wassim:wassimoux30@cluster0.3pj8tye.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0";
+        string connectionString = "mongodb://localhost:27017/";
         Database db = new Database(connectionString);
         await Database.connectionToDB();
-        var result = await Embedding.EmbedText("Ukrain war in the united state");
-        Console.WriteLine("embedded text; "+result);
-        Console.WriteLine(await Embedding.getTheBestMatch(result));
+        var embeddedText = await Embedding.EmbedText("Ukrain war in the united state");
+        var result  = await Embedding.getTheBestMatch(embeddedText);
+        Console.WriteLine("best match is: "+result);
+        
     }
 }

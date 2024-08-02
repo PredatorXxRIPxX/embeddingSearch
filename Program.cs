@@ -9,8 +9,7 @@ class Program
         await Database.connectionToDB();
         List<float> embeddedText = await Embedding.EmbedText("Ukrain war in the united state");
         Console.WriteLine("Looking for the best match: ...");
-        var result  = await Embedding.GetTheBestMatch(embeddedText);
+        var result  = await Embedding.FindBestMatchUsingFaiss(embeddedText);
         Console.WriteLine("best match is: "+result);
-        
     }
 }

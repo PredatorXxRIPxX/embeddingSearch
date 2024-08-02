@@ -3,7 +3,8 @@ using System.Text;
 using MongoDB.Bson;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
-
+using MongoDB.Driver;
+using FaissMask;
 
 public static class Embedding
 {
@@ -44,6 +45,7 @@ public static class Embedding
             return null;
         }
     }
+    
 
     private static double CosineSimilarity(List<float> vec1, List<float> vec2)
     {
@@ -70,33 +72,42 @@ public static class Embedding
         return dotProduct / (magnitude1 * magnitude2);
     }
 
-
-    public static async Task<double> GetTextSimilarity(string text1, string text2)
+    public static async Task<string?> FindBestMatchUsingFaiss(List<float> queryEmbedding)
     {
-        var payload = new
+        var documents = await Database.getDocuments();
+        if (documents == null || documents.Count == 0)
         {
-            input = new List<string> { text1, text2 },
-            model = "text-similarity-davinci-001"
-        };
-        var json = JsonConvert.SerializeObject(payload);
-        var content = new StringContent(json, Encoding.UTF8, "application/json");
+            throw new InvalidOperationException("No documents found in the database.");
+        }
 
-        try
+        long dimension = documents.Count;
+        var index = new IndexFlatL2(dimension);
+        Console.WriteLine("Adding embeddings to the index...");
+        foreach (var doc in documents)
         {
-            client.DefaultRequestHeaders.Clear();
-            client.DefaultRequestHeaders.Add("Authorization", $"Bearer {apikey}");
-            var response = await client.PostAsync(similarityUrl, content);
-            var responseString = await response.Content.ReadAsStringAsync();
-            var responseObject = JsonConvert.DeserializeObject<JObject>(responseString);
-            var similarity = responseObject?["data"]?[0]?["similarity"]?.Value<double>() ?? 0.0;
-            return similarity;
+            if (doc.TryGetValue("embedding", out BsonValue embeddingValue))
+            {
+                var embeddingArray = JArray.Parse(embeddingValue.AsString);
+                var embedding = embeddingArray.Select(item => item.Value<float>()).ToArray();
+                index.Add(embedding);
+            }
         }
-        catch (Exception e)
+        Console.WriteLine("Indexing complete.");
+        Console.WriteLine("Searching for the best match...");
+
+        int k = 1;
+        var distances = new float[k];
+        var indices = new long[k];
+        index.Search(queryEmbedding.ToArray(), k);
+
+        if (indices.Length > 0 && indices[0] >= 0 && indices[0] < documents.Count)
         {
-            Console.WriteLine($"Error: {e.Message}");
-            return 0.0;
+            return documents[(int)indices[0]]["title"].AsString;
         }
+
+        return null;
     }
+
 
     public static async Task<string?> GetTheBestMatch(List<float> arrayOrigin)
     {
@@ -107,15 +118,13 @@ public static class Embedding
         }
 
         double bestSimilarity = double.NegativeInfinity;
-        string bestMatch = null;
-
+        string bestMatch = null;  
         foreach (var document in documents)
         {
             if (document.TryGetValue("embedding", out BsonValue embeddingValue))
             {
                 var embeddingArray = JArray.Parse(embeddingValue.AsString);
                 var embeddingList = embeddingArray.Select(item => item.Value<float>()).ToList();
-
                 var similarity = CosineSimilarity(embeddingList, arrayOrigin);
                 if (similarity > bestSimilarity)
                 {

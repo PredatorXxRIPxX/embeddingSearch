@@ -46,6 +46,10 @@
         "net8.0": {
           "targetAlias": "net8.0",
           "dependencies": {
+            "FaissMask": {
+              "target": "Package",
+              "version": "[0.3.2-beta02, )"
+            },
             "MongoDB.Bson": {
               "target": "Package",
               "version": "[2.28.0, )"

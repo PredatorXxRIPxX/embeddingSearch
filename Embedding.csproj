@@ -8,6 +8,8 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <PackageReference Include="FaissMask" Version="0.3.2-beta02" />
+    <PackageReference Include="FaissSharp" Version="1.0.1" />
     <PackageReference Include="MongoDB.Bson" Version="2.28.0" />
     <PackageReference Include="MongoDB.Driver" Version="2.28.0" />
     <PackageReference Include="Newtonsoft.Json" Version="13.0.3" />
